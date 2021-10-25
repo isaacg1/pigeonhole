@@ -53,3 +53,23 @@ Here's all of the clauses in the new encoding
 - OR(not(q_{i-1}j), q_ij), for all 2 <= i <= n, 1 <= j <= n-1.
 - OR(not(p_ij), q_ij), for all 1 <= i <= n, 1 <= j <= n-1.
 - OR(not(q_{i-1}j), not(p_ij)), for all 2 <= i <= n, 1 <= j <= n-1.
+
+# Two more O(n^2) encodings
+
+AMO(x1, .. xn)
+->
+
+- AMO(x1,x2,x3,y) and AMO(x4, ... not(y))
+- AMO(x1,x2,x3,y) and AMO(not(y),x4, ...)
+- AMO(x1,x2,y) and AMO(not(y),x3, ...)
+
+# Plan
+
+1. Generate: generate Cook formula
+
+2. Derive each of the O(n^2) encodings from Cook formula (three options above)
+
+3. From a O(n^2) encoding of PHP(n) recursively derive PHP(n-1) encoding.
+
+When I say "derive" I mean write an extension / blocked clause addition-style DRAT proof.
+
