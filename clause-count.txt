@@ -1,7 +1,14 @@
 Standard (Cook) proof:
-O(n^4), not sure specifically.
-Leading term should be n^4/6
-Next-to-leading should be 4/3 n^3?
+
+Recurse, k+1 -> k:
+Introduce x: 4k^2 + 4k
+Constrain x: k^2(k-1)/2
+Bird in a hole: k+1
+Total:
+1/2 k^3 + 7/2 k^2 + 5k + 1
+
+Summed over all k from 1 to n-1:
+1/8 n^4 + 11/12 n^3 + 7/8 n^2 - 11/12 n - 1
 
 Cardinality proof:
 
@@ -28,6 +35,6 @@ Plus one for the implicit empty clause.
 Total:
 3n^3+3n^2+n
 
-Prediction: If n>18, smallest known.
+If n>=18, smaller than Cook's proof.
 
 
