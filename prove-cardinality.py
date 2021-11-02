@@ -27,7 +27,7 @@ def derive_cardinality(n):
     num_birds = n + 1
     num_holes = n
     print("c Derive cardinality constraints from standard.")
-    print("Vars {}-{}".format(num_holes * num_birds, 2 * num_holes * num_birds))
+    print("c Vars {}-{}".format(num_holes * num_birds, 2 * num_holes * num_birds))
     for j in range(1, num_holes + 1):
         for i in range(0, num_birds):
             x_ij = i * num_holes + j

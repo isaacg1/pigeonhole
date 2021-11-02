@@ -1,0 +1,33 @@
+Standard (Cook) proof:
+O(n^4), not sure specifically.
+Leading term should be n^4/6
+Next-to-leading should be 4/3 n^3?
+
+Cardinality proof:
+
+Derive:
+4n^2 + 2n
+
+Recurse, k+1 -> k:
+Introduce x: 4k^2 + 4k
+Introduce q: 3k^2 + 2k
+Constrain q: 2k^2
+Bird in a hole: k+1
+Total:
+9k^2 + 7k + 1
+
+Summed over all k from 1 to n-1:
+9(n-1)n(2n-1)/6
++ 7n(n-1)/2
++ n-1
+=
+3n^3-n^2-n-1
+
+Plus one for the implicit empty clause.
+
+Total:
+3n^3+3n^2+n
+
+Prediction: If n>18, smallest known.
+
+
