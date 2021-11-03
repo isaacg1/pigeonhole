@@ -163,13 +163,111 @@ def recurse_cardinality(n, n_prev):
         print("c Bird {} in a hole on iter {}".format(i, n_prev -1))
         print("{} 0".format(clause_str))
 
+# It's good practice to have a small working set,
+# by deleting clauses once you're done.
+def delete_original(n):
+    num_birds = n+1
+    num_holes = n
+    print("c Delete original")
+    # i is hole, j is bird1, k is bird2. Each pair of birds is not in the same hole.
+    for i in range(1, num_holes+1):
+        for j in range(0, num_birds):
+            for k in range(j+1, num_birds):
+                var_j = j * num_holes + i
+                var_k = k * num_holes + i
+                print("d -{} -{} 0".format(var_j, var_k))
+
+def delete_derive(n):
+    num_birds = n + 1
+    num_holes = n
+    print("c Delete derive")
+    for j in range(1, num_holes + 1):
+        for i in range(0, num_birds):
+            x_ij = i * num_holes + j
+            q_ij = num_holes * num_birds + i * num_holes + j
+            if i == 0:
+                print("d -{} {} 0".format(q_ij, x_ij))
+                print("d {} -{} 0".format(q_ij, x_ij))
+            else:
+                q_mij = num_holes * num_birds + (i - 1) * num_holes + j
+                print("d -{} {} {} 0".format(q_ij, x_ij, q_mij))
+                print("d {} -{} 0".format(q_ij, x_ij))
+                print("d {} -{} 0".format(q_ij, q_mij))
+
+                print("d -{} -{} 0".format(q_mij, x_ij))
+    # From generate
+    for i in range(0, num_birds):
+        vars_in_clause = []
+        for j in range(1, num_holes + 1):
+            vars_in_clause.append(i * num_holes + j)
+        clause_str = ' '.join(str(v) for v in vars_in_clause)
+        print("d {} 0".format(clause_str))
+    
+def delete_recursive(n, n_prev):
+    num_birds_orig = n + 1
+    num_holes_orig = n
+    num_birds_prev = n_prev + 1
+    num_holes_prev = n_prev
+    num_birds_curr = num_birds_prev - 1
+    num_holes_curr = num_holes_prev - 1
+    base_var_prev = sum(
+        2 * num_holes_i * (num_holes_i + 1)
+        for num_holes_i in range(num_holes_prev + 1, num_holes_orig + 1)
+    )
+    base_var_curr = base_var_prev + 2 * num_holes_prev * num_birds_prev
+    print("c Delete clauses generated on {}".format(n_prev))
+    for j in range(1, num_holes_curr + 1):
+        x_0jpk = base_var_prev + 0 * num_holes_prev + j
+        for i in range(0, num_birds_curr):
+            x_ijk = base_var_curr + i * num_holes_curr + j
+            x_pijpk = base_var_prev + (i + 1) * num_holes_prev + j
+            x_pipkpk = base_var_prev + (i + 1) * num_holes_prev + num_holes_prev
+            print("d -{} {} {} 0".format(x_ijk, x_pijpk, x_pipkpk))
+            print("d -{} {} {} 0".format(x_ijk, x_pijpk, x_0jpk))
+            print("d {} -{} 0".format(x_ijk, x_pijpk))
+            print("d {} -{} -{} 0".format(x_ijk, x_pipkpk, x_0jpk))
+
+            q_ijk = (
+                base_var_curr + num_holes_curr * num_birds_curr + i * num_holes_curr + j
+            )
+            if i == 0:
+                print("d -{} {} 0".format(q_ijk, x_ijk))
+                print("d {} -{} 0".format(q_ijk, x_ijk))
+            else:
+                q_mijk = (
+                    base_var_curr
+                    + num_holes_curr * num_birds_curr
+                    + (i - 1) * num_holes_curr
+                    + j
+                )
+                print("d -{} {} {} 0".format(q_ijk, x_ijk, q_mijk))
+                print("d {} -{} 0".format(q_ijk, x_ijk))
+                print("d {} -{} 0".format(q_ijk, q_mijk))
+
+                print("d {} -{} -{} 0".format(x_0jpk, q_mijk, x_ijk))
+                print("d -{} -{} 0".format(q_mijk, x_ijk))
+    for i in range(0, num_birds_curr):
+        hole_vars = []
+        for j in range(1, num_holes_curr + 1):
+            x_ijk = base_var_curr + i * num_holes_curr + j
+            hole_vars.append(x_ijk)
+        clause_str = " ".join(str(var) for var in hole_vars)
+        print("d {} 0".format(clause_str))
+    
+
 # End-to-end proof
 def full_proof(n):
     derive_cardinality(n)
+    delete_original(n)
     for n_i in range(n, 1, -1):
         recurse_cardinality(n, n_i)
+        if n_i < n:
+            delete_recursive(n, n_i+1)
+        else:
+            delete_derive(n)
     # I believe we can just finish at this point
     print("c Complete")
+
 if __name__ == "__main__":
     import sys
 
