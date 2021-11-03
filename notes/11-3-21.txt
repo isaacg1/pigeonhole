@@ -1,0 +1,24 @@
+x_1, x_2, x_3, x_4, ...
+
+y V x_1 V x_2 V x_3
+~y V ~x_1
+~y V ~x_2
+~y V ~x_3
+
+~x_1 V ~x_2
+~x_1 V ~x_3
+~x_2 V ~x_3
+
+---
+
+Given:
+~x_i V ~x_j forall i, j
+
+Derive:
+AMO(y_i, x_j, y_i+1)
+=
+y_{i+1} V x_j V y_i
+~y_{i+1} V ~y_i
+~y_{i+1} V ~x_j
+~y_i V ~x_j
+

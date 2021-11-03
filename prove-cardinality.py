@@ -70,6 +70,7 @@ def derive_cardinality(n):
 # Plan: think of x_ij as x_ijn: the bird placement on iteration n.
 # Likewise, q_ijn.
 # Define x_ij{n-1} to be x_{i+1}jn or (x_{i+1}nn and x_0jn)
+#     Contrast to Cook: x_ij{n-1} <=> x_ijn or (x_inn and x_{n+1}jn)
 # Basically, shift all the bird positions down by one.
 # Use i=0 as the bird to be removed
 # It's first in the q ordering, so it's easier to propagate.
