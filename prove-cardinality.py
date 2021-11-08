@@ -105,7 +105,7 @@ def recurse_cardinality(n, n_prev):
 
             # First, introduce the new x var.
             print("c Introduce x({}, {}, {})".format(i, j, n_prev - 1))
-            # x_ijk <=> x_ijpk or (x_ipkpk and x_pkjpk)
+            # x_ijk <=> x_pijpk or (x_pipkpk and x_0jpk)
 
             # x_ijk -> x_pijpk V x_pipkpk
             print("-{} {} {} 0".format(x_ijk, x_pijpk, x_pipkpk))
