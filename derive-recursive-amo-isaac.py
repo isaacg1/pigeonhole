@@ -27,7 +27,7 @@ def derive_recursive(n):
 
     for j in range(1, num_holes+1): # [1, n]
         v = []
-        for i in range(num_holes):
+        for i in range(num_birds):
             x_ij = i* num_holes + j
             v.append(x_ij)
         l = 0
