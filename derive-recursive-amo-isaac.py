@@ -58,42 +58,8 @@ def derive_recursive(n):
                 v = []
             l += 1
             
-        """
-			# for each j, there is y_j
-			y_j = num_holes * num_birds + j
-			
-			# (x_1j, x_2j, x_3j, y_j)
-			x_1j = 0 * num_holes + j
-			x_2j = 1 * num_holes + j
-			x_3j = 2 * num_holes + j
-
-			amo1 = CardEnc.atmost([x_1j, x_2j, x_3j, y_j], encoding=EncType.pairwise)
-			for c in amo1.clauses: 
-				cnf.append(c)
-
-			# (not(y_j), x_4j, ..., x_{n+1}j)
-			v = [-(y_j)] 
-			for i in range(3, num_birds): # [3, n]
-				x_ij = i * num_holes + j 
-				v.append(x_ij)
-				
-			amo2 = CardEnc.atmost(v, encoding=EncType.pairwise)
-			for c in amo2.clauses: 
-				cnf.append(c)
-                """
-
-	# write to file
-	# cnf.to_file('amo.drat')
-
-	# print to terminal
-    #for c in cnf:#.clauses:
-    #    print(" ".join(str(e) for e in c) + " 0")
-
-
 if __name__ == '__main__':
     import sys
-#    from pysat.formula import CNF
-#    from pysat.card import *
     if len(sys.argv) < 2:
         print("Call with command line arg: n == num holes")
     else:
