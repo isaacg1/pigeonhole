@@ -19,46 +19,44 @@
 # AMO(x_1k, x_2k, x_3k, y) and AMO(not(y), x_4k, ..., x_{n+1}k)
 
 def derive_amo(n):
-	num_birds = n + 1
-	num_holes = n
-	print("c Derive cardinality constraints from standard.")
+    num_birds = n+1
+    num_holes = n
 
-	cnf = CNF()
+    #cnf = CNF()
+    cnf = []
 
-	# TODO: apply direct encoding for num_birds <= 3
-	if num_birds <= 3:
-		print("not yet")
-	else:
-		for j in range(1, num_holes+1): # [1, n]
-			# for each j, there is y_j
-			y_j = num_holes * num_birds + j
-			
-			# (x_1j, x_2j, x_3j, y_j)
-			# TODO: test how many vars in the amo1 gives the best result
-			x_1j = 0 * num_holes + j
-			x_2j = 1 * num_holes + j
-			x_3j = 2 * num_holes + j
-
-			amo1 = CardEnc.atmost([x_1j, x_2j, x_3j, y_j], encoding=EncType.pairwise)
-			for c in amo1.clauses: 
-				cnf.append(c)
-
-			# (not(y_j), x_4j, ..., x_{n+1}j)
-			v = [-(y_j)] 
-			for i in range(3, num_birds): # [3, n]
-				x_ij = i * num_holes + j 
-				v.append(x_ij)
-				
-			amo2 = CardEnc.atmost(v, encoding=EncType.pairwise)
-			for c in amo2.clauses: 
-				cnf.append(c)
-
-	# write to file
-	# cnf.to_file('amo.drat')
-
-	# print to terminal
-	for c in cnf.clauses:
-		print(" ".join(str(e) for e in c) + " 0")
+    for j in range(1, num_holes+1): # [1, n]
+        v = []
+        for i in range(num_birds):
+            x_ij = i* num_holes + j
+            v.append(x_ij)
+        l = 0
+        print("c start iter {}".format(j))
+        while len(v) > 1:
+            if len(v) > 3:
+                y_lj = num_holes * num_birds + l * num_holes + j
+                print("c l={} j={} y_lj={}".format(l, j, y_lj))
+                front = v[:3] + [y_lj]
+                v = v[3:]
+                #cnf.extend(CardEnc.atmost(front, encoding=EncType.pairwise))
+                for index_1 in range(len(front)):
+                    for index_2 in range(index_1+1, len(front)):
+                        #cnf.append([-front[i], -front[j]])
+                        print("c {} {}".format(index_2, index_1))
+                        print("c {}".format(front))
+                        print("{} {} 0".format(-front[index_2], -front[index_1]))
+                # Positive constraint
+                print("c Positive constraint")
+                print("{} {} {} {} 0".format(front[3], front[0], front[1], front[2]))
+                v.insert(0, -y_lj)
+            else:
+                print("c final clauses of iter {}".format(j))
+                for index_1 in range(len(v)):
+                    for index_2 in range(index_1+1, len(v)):
+                        #cnf.append([-v[i], -v[j]])
+                        print("{} {} 0".format(-v[index_1], -v[index_2]))
+                v = []
+            l += 1
 
 # Prove amo constraints.
 # AMO constraints are defined as:
@@ -78,121 +76,219 @@ def derive_amo(n):
 
 
 def recurse_amo(n, n_prev):
-	num_birds_orig = n + 1
-	num_holes_orig = n
-	num_birds_prev = n_prev + 1
-	num_holes_prev = n_prev
-	num_birds_curr = num_birds_prev - 1
-	num_holes_curr = num_holes_prev - 1
-	base_var_prev = sum(
-		num_holes_i * (num_holes_i + 2) 
-		for num_holes_i in range(num_holes_prev + 1, num_holes_orig + 1)
-	)
-	base_var_curr = base_var_prev + 2 * num_holes_prev * num_birds_prev
-	print("c Recurse amo from {} to {}".format(n_prev, n_prev - 1))
-	print(
-		"c Vars {}-{}".format(
-			base_var_curr, base_var_curr + 2 * num_holes_curr * num_birds_curr
-		)
-	)
+    num_birds_orig = n + 1
+    num_holes_orig = n
+    num_birds_prev = n_prev + 1
+    num_holes_prev = n_prev
+    num_birds_curr = num_birds_prev - 1
+    num_holes_curr = num_holes_prev - 1
+    base_var_prev = sum(
+        2 * num_holes_i * (num_holes_i + 1)
+        for num_holes_i in range(num_holes_prev + 1, num_holes_orig + 1)
+    )
+    base_var_curr = base_var_prev + 2 * num_holes_prev * num_birds_prev
+    print("c Recurse amo from {} to {}".format(n_prev, n_prev - 1))
+    print(
+        "c Vars {}-{}".format(
+            base_var_curr, base_var_curr + 2 * num_holes_curr * num_birds_curr
+        )
+    )
 
-	cnf = CNF()
+    cnf = []
 
-	for j in range(1, num_holes_curr + 1):
-		# Q: why do we need this?
-		# x_0jpk = base_var_prev + 0 * num_holes_prev + j
-		# for i in range(0, num_birds_curr):
-		#     x_ijk = base_var_curr + i * num_holes_curr + j
-		#     x_pijpk = base_var_prev + (i + 1) * num_holes_prev + j
-		#     x_pipkpk = base_var_prev + (i + 1) * num_holes_prev + num_holes_prev
+    for j in range(1, num_holes_curr + 1):
+        
+        v = []
 
-		#     # First, introduce the new x var.
-		#     print("c Introduce x({}, {}, {})".format(i, j, n_prev - 1))
-		#     # x_ijk <=> x_ijpk or (x_ipkpk and x_pkjpk)
+        x_0jpk = base_var_prev + 0 * num_holes_prev + j
+        for i in range(0, num_birds_curr):
+            x_ijk = base_var_curr + i * num_holes_curr + j
+            x_pijpk = base_var_prev + (i + 1) * num_holes_prev + j
+            x_pipkpk = base_var_prev + (i + 1) * num_holes_prev + num_holes_prev
 
-		#     # x_ijk -> x_pijpk V x_pipkpk
-		#     print("-{} {} {} 0".format(x_ijk, x_pijpk, x_pipkpk))
-		#     # x_ijk -> x_pijpk V x_0jpk
-		#     print("-{} {} {} 0".format(x_ijk, x_pijpk, x_0jpk))
-		#     # x_pijpk -> x_ijk
-		#     print("{} -{} 0".format(x_ijk, x_pijpk))
-		#     # x_pipkpk /\ x_0jpk -> x_ijk
-		#     print("{} -{} -{} 0".format(x_ijk, x_pipkpk, x_0jpk))
+            # First, introduce the new x var.
+            print("c Introduce x({}, {}, {})".format(i, j, n_prev - 1))
+            # x_ijk <=> x_ijpk or (x_ipkpk and x_pkjpk)
 
-		y_jk = (
-			base_var_curr + num_holes_curr * num_birds_curr + j
-		)
+            # x_ijk -> x_pijpk V x_pipkpk
+            print("-{} {} {} 0".format(x_ijk, x_pijpk, x_pipkpk))
+            # x_ijk -> x_pijpk V x_0jpk
+            print("-{} {} {} 0".format(x_ijk, x_pijpk, x_0jpk))
+            # x_pijpk -> x_ijk
+            print("{} -{} 0".format(x_ijk, x_pijpk))
+            # x_pipkpk /\ x_0jpk -> x_ijk
+            print("{} -{} -{} 0".format(x_ijk, x_pipkpk, x_0jpk))
 
-		# (x_1jk, x_2jk, x_3jk, y_jk)
-		x_1jk = base_var_curr + 0 * num_holes_curr + j
-		x_2jk = base_var_curr + 1 * num_holes_curr + j
-		x_3jk = base_var_curr + 2 * num_holes_curr + j
+            v.append(x_ijk)
 
-		alo = [x_1jk, x_2jk, x_3jk]
+        l = 0
+        print("c start iter {}".format(j))
+        while len(v) > 1:
+            if len(v) > 3:
+                y_ljk = base_var_curr + num_holes_curr * num_birds_curr + l * num_holes_curr + j
+                print("c l={} j={} y_lj={}".format(l, j, y_ljk))
+                front = v[:3] + [y_ljk]
+                v = v[3:]
+                #cnf.extend(CardEnc.atmost(front, encoding=EncType.pairwise))
+                for index_1 in range(len(front)):
+                    for index_2 in range(index_1+1, len(front)):
+                        #cnf.append([-front[i], -front[j]])
+                        print("c {} {}".format(index_2, index_1))
+                        print("c {}".format(front))
+                        print("{} {} 0".format(-front[index_2], -front[index_1]))
+                # Positive constraint
+                print("c Positive constraint")
+                print("{} {} {} {} 0".format(front[3], front[0], front[1], front[2]))
+                v.insert(0, -y_ljk)
+            else:
+                print("c final clauses of iter {}".format(j))
+                for index_1 in range(len(v)):
+                    for index_2 in range(index_1+1, len(v)):
+                        if index_1 == 0: # bridging the gap 
+                            print("{} {} {} 0".format(x_0jpk, -v[index_1], -v[index_2]))
+                        print("{} {} 0".format(-v[index_1], -v[index_2]))
+                v = []
+            l += 1
 
-		amo1 = CardEnc.atmost([x_1jk, x_2jk, x_3jk, y_jk], encoding=EncType.pairwise)
-		for c in amo1.clauses: 
-			cnf.append(c)
+        # # write to file
+        # # cnf.to_file('amo.drat')
 
-		# (not(y_j), x_4j, ..., x_{n+1}j)
-		v = [-(y_jk)] 
-		for i in range(3, num_birds_curr): # [3, n]
-			x_ijk = base_var_curr + i * num_holes_curr + j 
-			v.append(x_ijk)
-			alo.append(x_ijk)
-			
-		amo2 = CardEnc.atmost(v, encoding=EncType.pairwise)
-		for c in amo2.clauses: 
-			cnf.append(c)
+        # # print to terminal
+        # for c in cnf.clauses:
+        #   print(" ".join(str(e) for e in c) + " 0")
 
-		# Each bird is in ALO hole
-		c.append(alo)
+    for i in range(0, num_birds_curr):
+        # Each bird is still in a hole
+        hole_vars = []
+        for j in range(1, num_holes_curr + 1):
+            x_ijk = base_var_curr + i * num_holes_curr + j
+            hole_vars.append(x_ijk)
+        clause_str = " ".join(str(var) for var in hole_vars)
+        print("c Bird {} in a hole on iter {}".format(i, n_prev -1))
+        print("{} 0".format(clause_str))
 
-		# write to file
-		# cnf.to_file('amo.drat')
+# Q: why some deleted clauses are not existing in the original formula
+def delete_original(n):
+    num_birds = n+1
+    num_holes = n
+    print("c Delete original")
+    # i is hole, j is bird1, k is bird2. Each pair of birds is not in the same hole.
+    for i in range(1, num_holes+1):
+        for j in range(0, num_birds):
+            for k in range(j+1, num_birds): # should not go over the bounds
+                var_j = j * num_holes + i
+                var_k = k * num_holes + i
+                print("d -{} -{} 0".format(var_j, var_k))
 
-		# print to terminal
-		for c in cnf.clauses:
-			print(" ".join(str(e) for e in c) + " 0")
+def delete_derive(n):
+    num_birds = n+1
+    num_holes = n
+    #cnf = CNF()
+    cnf = []
+    for j in range(1, num_holes+1): # [1, n]
+        v = []
+        for i in range(num_birds):
+            x_ij = i* num_holes + j
+            v.append(x_ij)
+        l = 0
+        while len(v) > 1:
+            if len(v) > 3:
+                y_lj = num_holes * num_birds + l * num_holes + j
+                front = v[:3] + [y_lj]
+                v = v[3:]
+                for index_1 in range(len(front)):
+                    for index_2 in range(index_1+1, len(front)):
+                        print("d {} {} 0".format(-front[index_2], -front[index_1]))
+                # Positive constraint
+                print("d {} {} {} {} 0".format(front[3], front[0], front[1], front[2]))
+                v.insert(0, -y_lj)
+            else:
+                for index_1 in range(len(v)):
+                    for index_2 in range(index_1+1, len(v)):
+                        print("d {} {} 0".format(-v[index_1], -v[index_2]))
+                v = []
+            l += 1
+    # From generate
+    for i in range(0, num_birds):
+        vars_in_clause = []
+        for j in range(1, num_holes + 1):
+            vars_in_clause.append(i * num_holes + j)
+        clause_str = ' '.join(str(v) for v in vars_in_clause)
+        print("d {} 0".format(clause_str))
+    
+def delete_recursive(n, n_prev):
+    num_birds_orig = n + 1
+    num_holes_orig = n
+    num_birds_prev = n_prev + 1
+    num_holes_prev = n_prev
+    num_birds_curr = num_birds_prev - 1
+    num_holes_curr = num_holes_prev - 1
+    base_var_prev = sum(
+        2 * num_holes_i * (num_holes_i + 1)
+        for num_holes_i in range(num_holes_prev + 1, num_holes_orig + 1)
+    )
+    base_var_curr = base_var_prev + 2 * num_holes_prev * num_birds_prev
+    cnf = []
+    for j in range(1, num_holes_curr + 1):
+        v = []
+        x_0jpk = base_var_prev + 0 * num_holes_prev + j
+        for i in range(0, num_birds_curr):
+            x_ijk = base_var_curr + i * num_holes_curr + j
+            x_pijpk = base_var_prev + (i + 1) * num_holes_prev + j
+            x_pipkpk = base_var_prev + (i + 1) * num_holes_prev + num_holes_prev
 
-	# for i in range(0, num_birds_curr):
-	# 	# Each bird is still in a hole
-	# 	hole_vars = []
-	# 	for j in range(1, num_holes_curr + 1):
-	# 		x_ijk = base_var_curr + i * num_holes_curr + j
-	# 		hole_vars.append(x_ijk)
-	# 	clause_str = " ".join(str(var) for var in hole_vars)
-	# 	print("c Bird {} in a hole on iter {}".format(i, n_prev -1))
-	# 	print("{} 0".format(clause_str))
+            print("d -{} {} {} 0".format(x_ijk, x_pijpk, x_pipkpk))
+            print("d -{} {} {} 0".format(x_ijk, x_pijpk, x_0jpk))
+            print("d {} -{} 0".format(x_ijk, x_pijpk))
+            print("d {} -{} -{} 0".format(x_ijk, x_pipkpk, x_0jpk))
 
-# # End-to-end proof
-# def full_proof(n):
-#     derive_amo(n)
-#     delete_original(n)
-#     for n_i in range(n, 1, -1):
-#         recurse_cardinality(n, n_i)
-#         if n_i < n:
-#             delete_recursive(n, n_i+1)
-#         else:
-#             delete_derive(n)
-#     print("c Complete")
+            v.append(x_ijk)
+
+        l = 0
+        while len(v) > 1:
+            if len(v) > 3:
+                y_ljk = base_var_curr + num_holes_curr * num_birds_curr + l * num_holes_curr + j
+                front = v[:3] + [y_ljk]
+                v = v[3:]
+                for index_1 in range(len(front)):
+                    for index_2 in range(index_1+1, len(front)):
+                        print("d {} {} 0".format(-front[index_2], -front[index_1]))
+                print("d {} {} {} {} 0".format(front[3], front[0], front[1], front[2]))
+                v.insert(0, -y_ljk)
+            else:
+                for index_1 in range(len(v)):
+                    for index_2 in range(index_1+1, len(v)):
+                        if index_1 == 0: # bridging the gap 
+                            print("d {} {} {} 0".format(x_0jpk, -v[index_1], -v[index_2]))
+                        print("d {} {} 0".format(-v[index_1], -v[index_2]))
+                v = []
+            l += 1
 
 # End-to-end proof
 def full_proof(n):
-	derive_amo(n)
-	for n_i in range(n, 1, -1):
-		recurse_amo(n, n_i)
-	# I believe we can just finish at this point
-	print("c Complete")
+    derive_amo(n)
+    delete_original(n)
+    for n_i in range(n, 1, -1):
+        recurse_amo(n, n_i)
+        if n_i < n:
+            delete_recursive(n, n_i+1)
+        else:
+            delete_derive(n)
+    print("c Complete")
+
+# End-to-end proof
+# def full_proof(n):
+#   derive_amo(n)
+#   for n_i in range(n, 1, -1):
+#       recurse_amo(n, n_i)
+#   print("c Complete")
 
 if __name__ == "__main__":
-	
-	import sys
-	from pysat.formula import CNF
-	from pysat.card import *
+    
+    import sys
 
-	if len(sys.argv) < 2:
-		print("Call with command line arg: n == num holes")
-	else:
-		n = int(sys.argv[1])
-		full_proof(n)
+    if len(sys.argv) < 2:
+        print("Call with command line arg: n == num holes")
+    else:
+        n = int(sys.argv[1])
+        full_proof(n)
