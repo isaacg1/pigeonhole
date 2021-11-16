@@ -40,6 +40,12 @@ def derive_amo(n, m):
                 v = v[m:]
                 for index_1 in range(len(front)):
                     for index_2 in range(index_1+1, len(front)):
+                        if index_1 > 0 or l == 0:
+                            if index_2 < m:
+                                print("c Skip {} {} because both are original vars".format(
+                                    front[index_1], front[index_2]
+                                ))
+                                continue
                         print("c {} {}".format(index_2, index_1))
                         print("c {}".format(front))
                         print("{} {} 0".format(-front[index_2], -front[index_1]))
@@ -54,6 +60,11 @@ def derive_amo(n, m):
                 print("c final clauses of iter {}".format(j))
                 for index_1 in range(len(v)):
                     for index_2 in range(index_1+1, len(v)):
+                        if index_1 > 0 or l == 0:
+                            print("c Skip {} {} because both are original vars".format(
+                                v[index_1], v[index_2]
+                            ))
+                            continue
                         print("{} {} 0".format(-v[index_1], -v[index_2]))
                 v = []
             l += 1

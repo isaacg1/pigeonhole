@@ -4,11 +4,11 @@
 # Plan to derive with just blocked clause addition and resolution.
 
 # Consider n+1 birds and n holes
-# x_ab represents bird a in hole b. 
+# x_ab represents bird a in hole b.
 
 # Input encoding:
 # Each bird is in at least one hole
-# OR(x_i1, x_i2, ..., x_in), for all 1 <= i <= n+1. 
+# OR(x_i1, x_i2, ..., x_in), for all 1 <= i <= n+1.
 # At most one bird in hole k (AMO(x_1k, x_2k, ..., x_{n+1}k)) encoded by:
 # For all i, j birds, hole k,
 # not(x_ik) or not(x_jk)
@@ -18,14 +18,15 @@
 # Encoding:
 # AMO(x_1k, x_2k, x_3k, y) and AMO(not(y), x_4k, ..., x_{n+1}k)
 
+
 def derive_amo(n):
-    num_birds = n+1
+    num_birds = n + 1
     num_holes = n
 
-    #cnf = CNF()
+    # cnf = CNF()
     cnf = []
 
-    for j in range(1, num_holes+1): # [1, n]
+    for j in range(1, num_holes + 1):  # [1, n]
         v = []
         for i in range(num_birds):
             x_ij = i * num_holes + j
@@ -38,10 +39,18 @@ def derive_amo(n):
                 print("c l={} j={} y_lj={}".format(l, j, y_lj))
                 front = v[:3] + [y_lj]
                 v = v[3:]
-                #cnf.extend(CardEnc.atmost(front, encoding=EncType.pairwise))
+                # cnf.extend(CardEnc.atmost(front, encoding=EncType.pairwise))
                 for index_1 in range(len(front)):
-                    for index_2 in range(index_1+1, len(front)):
-                        #cnf.append([-front[i], -front[j]])
+                    for index_2 in range(index_1 + 1, len(front)):
+                        if index_1 > 0 or l == 0:
+                            if index_2 < 3:
+                                print(
+                                    "c Skip {} {} because both are original vars".format(
+                                        front[index_1], front[index_2]
+                                    )
+                                )
+                                continue
+                        # cnf.append([-front[i], -front[j]])
                         print("c {} {}".format(index_2, index_1))
                         print("c {}".format(front))
                         print("{} {} 0".format(-front[index_2], -front[index_1]))
@@ -52,18 +61,26 @@ def derive_amo(n):
             else:
                 print("c final clauses of iter {}".format(j))
                 for index_1 in range(len(v)):
-                    for index_2 in range(index_1+1, len(v)):
-                        #cnf.append([-v[i], -v[j]])
+                    for index_2 in range(index_1 + 1, len(v)):
+                        if index_1 > 0 or l == 0:
+                            print(
+                                "c Skip {} {} because both are original vars".format(
+                                    v[index_1], v[index_2]
+                                )
+                            )
+                            continue
+                        # cnf.append([-v[i], -v[j]])
                         print("{} {} 0".format(-v[index_1], -v[index_2]))
                 v = []
             l += 1
+
 
 # Prove amo constraints.
 # AMO constraints are defined as:
 # AMO(x_1k, x_2k, x_3k, y) and AMO(not(y), x_4k, ..., x_{n+1}k)
 # where x_ab represents bird a in hole b
 
-# Plan: 
+# Plan:
 # think of x_ij as x_ijn: the bird placement on iteration n.
 # Also, y_j -> y_jn
 # Define x_ij{n-1} to be x_{i+1}jn or (x_{i+1}nn and x_1jn)
@@ -97,7 +114,7 @@ def recurse_amo(n, n_prev):
     cnf = []
 
     for j in range(1, num_holes_curr + 1):
-        
+
         v = []
 
         x_0jpk = base_var_prev + 0 * num_holes_prev + j
@@ -125,14 +142,19 @@ def recurse_amo(n, n_prev):
         print("c start iter {}".format(j))
         while len(v) > 1:
             if len(v) > 3:
-                y_ljk = base_var_curr + num_holes_curr * num_birds_curr + l * num_holes_curr + j
+                y_ljk = (
+                    base_var_curr
+                    + num_holes_curr * num_birds_curr
+                    + l * num_holes_curr
+                    + j
+                )
                 print("c l={} j={} y_lj={}".format(l, j, y_ljk))
                 front = v[:3] + [y_ljk]
                 v = v[3:]
-                #cnf.extend(CardEnc.atmost(front, encoding=EncType.pairwise))
+                # cnf.extend(CardEnc.atmost(front, encoding=EncType.pairwise))
                 for index_1 in range(len(front)):
-                    for index_2 in range(index_1+1, len(front)):
-                        #cnf.append([-front[i], -front[j]])
+                    for index_2 in range(index_1 + 1, len(front)):
+                        # cnf.append([-front[i], -front[j]])
                         print("c {} {}".format(index_2, index_1))
                         print("c {}".format(front))
                         print("{} {} 0".format(-front[index_2], -front[index_1]))
@@ -143,8 +165,8 @@ def recurse_amo(n, n_prev):
             else:
                 print("c final clauses of iter {}".format(j))
                 for index_1 in range(len(v)):
-                    for index_2 in range(index_1+1, len(v)):
-                        if index_1 == 0: # bridging the gap 
+                    for index_2 in range(index_1 + 1, len(v)):
+                        if index_1 == 0:  # bridging the gap
                             print("{} {} {} 0".format(x_0jpk, -v[index_1], -v[index_2]))
                         print("{} {} 0".format(-v[index_1], -v[index_2]))
                 v = []
@@ -164,31 +186,33 @@ def recurse_amo(n, n_prev):
             x_ijk = base_var_curr + i * num_holes_curr + j
             hole_vars.append(x_ijk)
         clause_str = " ".join(str(var) for var in hole_vars)
-        print("c Bird {} in a hole on iter {}".format(i, n_prev -1))
+        print("c Bird {} in a hole on iter {}".format(i, n_prev - 1))
         print("{} 0".format(clause_str))
+
 
 # Q: why some deleted clauses does not exist in the original formula
 def delete_original(n):
-    num_birds = n+1
+    num_birds = n + 1
     num_holes = n
     print("c Delete original")
     # i is hole, j is bird1, k is bird2. Each pair of birds is not in the same hole.
-    for i in range(1, num_holes+1):
+    for i in range(1, num_holes + 1):
         for j in range(0, num_birds):
-            for k in range(j+1, num_birds): # should not go over the bounds
+            for k in range(j + 1, num_birds):  # should not go over the bounds
                 var_j = j * num_holes + i
                 var_k = k * num_holes + i
                 print("d -{} -{} 0".format(var_j, var_k))
 
+
 def delete_derive(n):
-    num_birds = n+1
+    num_birds = n + 1
     num_holes = n
-    #cnf = CNF()
+    # cnf = CNF()
     cnf = []
-    for j in range(1, num_holes+1): # [1, n]
+    for j in range(1, num_holes + 1):  # [1, n]
         v = []
         for i in range(num_birds):
-            x_ij = i* num_holes + j
+            x_ij = i * num_holes + j
             v.append(x_ij)
         l = 0
         while len(v) > 1:
@@ -197,14 +221,14 @@ def delete_derive(n):
                 front = v[:3] + [y_lj]
                 v = v[3:]
                 for index_1 in range(len(front)):
-                    for index_2 in range(index_1+1, len(front)):
+                    for index_2 in range(index_1 + 1, len(front)):
                         print("d {} {} 0".format(-front[index_2], -front[index_1]))
                 # Positive constraint
                 print("d {} {} {} {} 0".format(front[3], front[0], front[1], front[2]))
                 v.insert(0, -y_lj)
             else:
                 for index_1 in range(len(v)):
-                    for index_2 in range(index_1+1, len(v)):
+                    for index_2 in range(index_1 + 1, len(v)):
                         print("d {} {} 0".format(-v[index_1], -v[index_2]))
                 v = []
             l += 1
@@ -213,9 +237,10 @@ def delete_derive(n):
         vars_in_clause = []
         for j in range(1, num_holes + 1):
             vars_in_clause.append(i * num_holes + j)
-        clause_str = ' '.join(str(v) for v in vars_in_clause)
+        clause_str = " ".join(str(v) for v in vars_in_clause)
         print("d {} 0".format(clause_str))
-    
+
+
 def delete_recursive(n, n_prev):
     num_birds_orig = n + 1
     num_holes_orig = n
@@ -247,34 +272,43 @@ def delete_recursive(n, n_prev):
         l = 0
         while len(v) > 1:
             if len(v) > 3:
-                y_ljk = base_var_curr + num_holes_curr * num_birds_curr + l * num_holes_curr + j
+                y_ljk = (
+                    base_var_curr
+                    + num_holes_curr * num_birds_curr
+                    + l * num_holes_curr
+                    + j
+                )
                 front = v[:3] + [y_ljk]
                 v = v[3:]
                 for index_1 in range(len(front)):
-                    for index_2 in range(index_1+1, len(front)):
+                    for index_2 in range(index_1 + 1, len(front)):
                         print("d {} {} 0".format(-front[index_2], -front[index_1]))
                 print("d {} {} {} {} 0".format(front[3], front[0], front[1], front[2]))
                 v.insert(0, -y_ljk)
             else:
                 for index_1 in range(len(v)):
-                    for index_2 in range(index_1+1, len(v)):
-                        if index_1 == 0: # bridging the gap 
-                            print("d {} {} {} 0".format(x_0jpk, -v[index_1], -v[index_2]))
+                    for index_2 in range(index_1 + 1, len(v)):
+                        if index_1 == 0:  # bridging the gap
+                            print(
+                                "d {} {} {} 0".format(x_0jpk, -v[index_1], -v[index_2])
+                            )
                         print("d {} {} 0".format(-v[index_1], -v[index_2]))
                 v = []
             l += 1
 
+
 # End-to-end proof
 def full_proof(n):
     derive_amo(n)
-    delete_original(n)
+    #delete_original(n)
     for n_i in range(n, 1, -1):
         recurse_amo(n, n_i)
         if n_i < n:
-            delete_recursive(n, n_i+1)
+            delete_recursive(n, n_i + 1)
         else:
             delete_derive(n)
     print("c Complete")
+
 
 # End-to-end proof
 # def full_proof(n):
@@ -284,7 +318,7 @@ def full_proof(n):
 #   print("c Complete")
 
 if __name__ == "__main__":
-    
+
     import sys
 
     if len(sys.argv) < 2:
