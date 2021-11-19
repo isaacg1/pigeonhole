@@ -18,6 +18,8 @@
 # Encoding:
 # AMO(x_1k, x_2k, x_3k, y) and AMO(not(y), x_4k, ..., x_{n+1}k)
 
+# The entire "derive" step is completely unnecessary.
+"""
 def derive_amo(n, m):
     num_birds = n+1
     num_holes = n
@@ -68,6 +70,7 @@ def derive_amo(n, m):
                         print("{} {} 0".format(-v[index_1], -v[index_2]))
                 v = []
             l += 1
+"""
 
 # Prove amo constraints.
 # AMO constraints are defined as:
@@ -86,7 +89,13 @@ def derive_amo(n, m):
 # So we can't prove the q_ijn -> q_ij{n-1} step.
 
 
-def recurse_amo(n, n_prev, m):
+def recurse_amo(n, n_prev, m, delete=False):
+    def print_clause(clause):
+        clause_str = " ".join(str(var) for var in clause)
+        if delete:
+            print("d {} 0".format(clause_str))
+        else:
+            print("{} 0".format(clause_str))
     num_birds_orig = n + 1
     num_holes_orig = n
     num_birds_prev = n_prev + 1
@@ -122,13 +131,17 @@ def recurse_amo(n, n_prev, m):
             # x_ijk <=> x_ijpk or (x_ipkpk and x_pkjpk)
 
             # x_ijk -> x_pijpk V x_pipkpk
-            print("-{} {} {} 0".format(x_ijk, x_pijpk, x_pipkpk))
+            #print("-{} {} {} 0".format(x_ijk, x_pijpk, x_pipkpk))
+            print_clause([-x_ijk, x_pijpk, x_pipkpk])
             # x_ijk -> x_pijpk V x_0jpk
-            print("-{} {} {} 0".format(x_ijk, x_pijpk, x_0jpk))
+            #print("-{} {} {} 0".format(x_ijk, x_pijpk, x_0jpk))
+            print_clause([-x_ijk, x_pijpk, x_0jpk])
             # x_pijpk -> x_ijk
-            print("{} -{} 0".format(x_ijk, x_pijpk))
+            #print("{} -{} 0".format(x_ijk, x_pijpk))
+            print_clause([x_ijk, -x_pijpk])
             # x_pipkpk /\ x_0jpk -> x_ijk
-            print("{} -{} -{} 0".format(x_ijk, x_pipkpk, x_0jpk))
+            #print("{} -{} -{} 0".format(x_ijk, x_pipkpk, x_0jpk))
+            print_clause([x_ijk, -x_pipkpk, -x_0jpk])
 
             v.append(x_ijk)
 
@@ -146,20 +159,27 @@ def recurse_amo(n, n_prev, m):
                         #cnf.append([-front[i], -front[j]])
                         print("c {} {}".format(index_2, index_1))
                         print("c {}".format(front))
-                        print("{} {} 0".format(-front[index_2], -front[index_1]))
+                        #print("{} {} 0".format(-front[index_2], -front[index_1]))
+                        print_clause([-front[index_2], -front[index_1]])
                 # Positive constraint
+                """
                 print("{}".format(front[m]), end=' ')
                 for m_i in range(m):
                     print("{}".format(front[m_i]), end=' ')
                 print("0")
+                """
+                pos_clause = [front[m]] + front[:-1]
+                print_clause(pos_clause)
                 v.insert(0, -y_ljk)
             else:
                 print("c final clauses of iter {}".format(j))
                 for index_1 in range(len(v)):
                     for index_2 in range(index_1+1, len(v)):
                         if index_1 == 0: # bridging the gap 
-                            print("{} {} {} 0".format(x_0jpk, -v[index_1], -v[index_2]))
-                        print("{} {} 0".format(-v[index_1], -v[index_2]))
+                            #print("{} {} {} 0".format(x_0jpk, -v[index_1], -v[index_2]))
+                            print_clause([x_0jpk, -v[index_1], -v[index_2]])
+                        #print("{} {} 0".format(-v[index_1], -v[index_2]))
+                        print_clause([-v[index_1], -v[index_2]])
                 v = []
             l += 1
 
@@ -176,9 +196,10 @@ def recurse_amo(n, n_prev, m):
         for j in range(1, num_holes_curr + 1):
             x_ijk = base_var_curr + i * num_holes_curr + j
             hole_vars.append(x_ijk)
-        clause_str = " ".join(str(var) for var in hole_vars)
+        #clause_str = " ".join(str(var) for var in hole_vars)
         print("c Bird {} in a hole on iter {}".format(i, n_prev -1))
-        print("{} 0".format(clause_str))
+        #print("{} 0".format(clause_str))
+        print_clause(hole_vars)
 
 # End-to-end proof
 # def full_proof(n):
@@ -194,9 +215,12 @@ def recurse_amo(n, n_prev, m):
 
 # End-to-end proof
 def full_proof(n, m):
-  derive_amo(n, m)
+  # Derive step is completely unnecessary - we can skip it and nothing breaks.
+  #derive_amo(n, m)
   for n_i in range(n, 1, -1):
       recurse_amo(n, n_i, m)
+      if n_i < n:
+        recurse_amo(n, n_i+1, m, delete=True)
   print("c Complete")
 
 if __name__ == "__main__":
