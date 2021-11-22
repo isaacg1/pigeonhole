@@ -201,6 +201,19 @@ def recurse_amo(n, n_prev, m, delete=False):
         #print("{} 0".format(clause_str))
         print_clause(hole_vars)
 
+def delete_original(n):
+    num_birds = n + 1
+    num_holes = n
+    print("c Delete original")
+    # i is hole, j is bird1, k is bird2. Each pair of birds is not in the same hole.
+    for i in range(1, num_holes + 1):
+        for j in range(0, num_birds):
+            if j < (num_birds - 1): # should not go over the bounds
+                for k in range(j + 1, num_birds):  
+                    var_j = j * num_holes + i
+                    var_k = k * num_holes + i
+                    print("d -{} -{} 0".format(var_j, var_k))
+
 # End-to-end proof
 # def full_proof(n):
 #     derive_amo(n)
@@ -217,6 +230,7 @@ def recurse_amo(n, n_prev, m, delete=False):
 def full_proof(n, m):
   # Derive step is completely unnecessary - we can skip it and nothing breaks.
   #derive_amo(n, m)
+  delete_original(n)
   for n_i in range(n, 1, -1):
       recurse_amo(n, n_i, m)
       if n_i < n:
