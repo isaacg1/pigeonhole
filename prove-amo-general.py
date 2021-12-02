@@ -18,59 +18,6 @@
 # Encoding:
 # AMO(x_1k, x_2k, x_3k, y) and AMO(not(y), x_4k, ..., x_{n+1}k)
 
-# The entire "derive" step is completely unnecessary.
-"""
-def derive_amo(n, m):
-    num_birds = n+1
-    num_holes = n
-
-    #cnf = CNF()
-    cnf = []
-
-    for j in range(1, num_holes+1): # [1, n]
-        v = []
-        for i in range(num_birds):
-            x_ij = i* num_holes + j
-            v.append(x_ij)
-        l = 0
-        print("c start iter {}".format(j))
-        while len(v) > 1:
-            if len(v) > m:
-                y_lj = num_holes * num_birds + l * num_holes + j
-                print("c l={} j={} y_lj={}".format(l, j, y_lj))
-                front = v[:m] + [y_lj]
-                v = v[m:]
-                for index_1 in range(len(front)):
-                    for index_2 in range(index_1+1, len(front)):
-                        if index_1 > 0 or l == 0:
-                            if index_2 < m:
-                                print("c Skip {} {} because both are original vars".format(
-                                    front[index_1], front[index_2]
-                                ))
-                                continue
-                        print("c {} {}".format(index_2, index_1))
-                        print("c {}".format(front))
-                        print("{} {} 0".format(-front[index_2], -front[index_1]))
-                # Positive constraint
-                print("c Positive constraint")
-                print("{}".format(front[m]), end=' ')
-                for m_i in range(m):
-                    print("{}".format(front[m_i]), end=' ')
-                print("0")
-                v.insert(0, -y_lj)
-            else:
-                print("c final clauses of iter {}".format(j))
-                for index_1 in range(len(v)):
-                    for index_2 in range(index_1+1, len(v)):
-                        if index_1 > 0 or l == 0:
-                            print("c Skip {} {} because both are original vars".format(
-                                v[index_1], v[index_2]
-                            ))
-                            continue
-                        print("{} {} 0".format(-v[index_1], -v[index_2]))
-                v = []
-            l += 1
-"""
 
 # Prove amo constraints.
 # AMO constraints are defined as:
@@ -128,14 +75,19 @@ def recurse_amo(n, n_prev, m, delete=False):
 
             # First, introduce the new x var.
             print("c Introduce x({}, {}, {})".format(i, j, n_prev - 1))
-            # x_ijk <=> x_ijpk or (x_ipkpk and x_pkjpk)
+            # wrong: x_ijk <=> x_ijpk or (x_ipkpk and x_pkjpk)
 
-            # x_ijk -> x_pijpk V x_pipkpk
-            #print("-{} {} {} 0".format(x_ijk, x_pijpk, x_pipkpk))
-            print_clause([-x_ijk, x_pijpk, x_pipkpk])
-            # x_ijk -> x_pijpk V x_0jpk
-            #print("-{} {} {} 0".format(x_ijk, x_pijpk, x_0jpk))
-            print_clause([-x_ijk, x_pijpk, x_0jpk])
+            if i == num_birds_curr - 1:
+                print("c Can skip clauses where x_kjk is negated")
+                print("c Skipping -{} {} {} 0".format(x_ijk, x_pijpk, x_pipkpk))
+                print("c Skipping -{} {} {} 0".format(x_ijk, x_pijpk, x_0jpk))
+            else:
+                # x_ijk -> x_pijpk V x_pipkpk
+                #print("-{} {} {} 0".format(x_ijk, x_pijpk, x_pipkpk))
+                print_clause([-x_ijk, x_pijpk, x_pipkpk])
+                # x_ijk -> x_pijpk V x_0jpk
+                #print("-{} {} {} 0".format(x_ijk, x_pijpk, x_0jpk))
+                print_clause([-x_ijk, x_pijpk, x_0jpk])
             # x_pijpk -> x_ijk
             #print("{} -{} 0".format(x_ijk, x_pijpk))
             print_clause([x_ijk, -x_pijpk])
@@ -175,11 +127,14 @@ def recurse_amo(n, n_prev, m, delete=False):
                 print("c final clauses of iter {}".format(j))
                 for index_1 in range(len(v)):
                     for index_2 in range(index_1+1, len(v)):
+                        """
                         if index_1 == 0: # bridging the gap 
                             #print("{} {} {} 0".format(x_0jpk, -v[index_1], -v[index_2]))
                             print_clause([x_0jpk, -v[index_1], -v[index_2]])
                         #print("{} {} 0".format(-v[index_1], -v[index_2]))
                         print_clause([-v[index_1], -v[index_2]])
+                        """
+                        print_clause([-v[index_2], -v[index_1]])
                 v = []
             l += 1
 
