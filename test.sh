@@ -18,6 +18,12 @@ for i in {1..20}
     for j in {2..9}
         do
         drat/drat-trim testing/php-standard-$i.cnf testing/amo-$i-$j.drat -b >/dev/null
+        result=$?
+        if [[ $result -gt 0 ]]
+        then
+            echo $result
+            exit $result
+        fi
         echo -n '.'
     done
     echo ''
