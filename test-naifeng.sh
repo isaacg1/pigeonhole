@@ -1,5 +1,5 @@
 #!/bin/bash
-# bash test-naifeng.sh i_min i_max j_min j_max (v)erify (d)elete
+# bash test-naifeng.sh i_min i_max j_min j_max (v)erify/(n)o (d)elete/(n)o
 # i in [1, inf)
 # j in [2, 9]
 echo "Clauses"
