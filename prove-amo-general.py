@@ -117,7 +117,7 @@ def recurse_amo(n, n_prev, m, is_lrat, delete=False):
 
         l = 0
         while len(v) > 1:
-            if len(v) > m:
+            if len(v) > m + 1:
                 y_ljk = (
                     base_var_curr
                     + num_holes_curr * num_birds_curr
@@ -184,6 +184,7 @@ def full_proof(n, m, is_lrat):
         else:
             delete_original(n)
     print("c Complete")
+    print("0")
 
 
 if __name__ == "__main__":
