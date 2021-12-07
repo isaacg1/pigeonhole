@@ -1,0 +1,24 @@
+#!/bin/bash
+# bash test-cadical.sh i_min i_max (d)elete/(n)o
+# i in [1, inf)
+
+rm -f cadical-results.txt
+
+for (( i = $1; i <= $2; i++))
+    do
+    python3 derive-recursive-amo.py $i > testing/amo-$i.cnf
+
+    num_vars=$(grep -Eo '[0-9]+' testing/amo-$i.cnf | sort -rn | head -n 1)
+    num_clauses=$(grep -c '^[-0-9]' testing/amo-$i.cnf)
+
+    echo "p cnf $num_vars $num_clauses" | cat - testing/amo-$i.cnf > /tmp/out && mv /tmp/out testing/amo-$i.cnf
+    
+    ./../cadical/build/cadical --no-binary testing/amo-$i.cnf testing/cadical-$i.drat
+
+    lines=$(grep -c '^[-0-9]' testing/cadical-$i.drat)
+    echo $(( $lines - 1 )) >> cadical-results.txt
+
+    if [ $3 == d ]; then
+        rm -f testing/cadical-$i.drat
+    fi 
+done
