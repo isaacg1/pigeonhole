@@ -89,29 +89,26 @@ def recurse_amo(n, n_prev, m, is_lrat, delete=False):
         x_0jpk = base_var_prev + 0 * num_holes_prev + j
         for i in range(0, num_birds_curr):
             x_ijk = base_var_curr + i * num_holes_curr + j
-            x_pijpk = base_var_prev + (i + 1) * num_holes_prev + j
-            x_pipkpk = base_var_prev + (i + 1) * num_holes_prev + num_holes_prev
-
             # First, introduce the new x var.
             print("c Introduce x({}, {}, {})".format(i, j, n_prev - 1))
 
-            if i == num_birds_curr - 1:
-                print("c Can skip clauses where x_kjk is negated")
-                print("c Skipping -{} {} {} 0".format(x_ijk, x_pijpk, x_pipkpk))
-                print("c Skipping -{} {} {} 0".format(x_ijk, x_pijpk, x_0jpk))
+            # Define x_ijk = x_ij(k+1) or (x_i(k+1)(k+1) and x_(k+1)j(k+1))
+            x_ijpk = base_var_prev + i * num_holes_prev + j
+            x_ipkpk = base_var_prev + i * num_holes_prev + num_holes_prev
+            x_pkjpk = base_var_prev + num_holes_prev * num_holes_prev + j
+
+            if i < num_birds_curr - 1:
+                current_clause += 1
+                print_clause([-x_ijk, x_ijpk, x_ipkpk], current_clause, [])
+                current_clause += 1
+                print_clause([-x_ijk, x_ijpk, x_pkjpk], current_clause, [])
             else:
-                # x_ijk -> x_pijpk V x_pipkpk
-                current_clause += 1
-                print_clause([-x_ijk, x_pijpk, x_pipkpk], current_clause, [])
-                # x_ijk -> x_pijpk V x_0jpk
-                current_clause += 1
-                print_clause([-x_ijk, x_pijpk, x_0jpk], current_clause, [])
-            # x_pijpk -> x_ijk
+                print("c Can skip negated x_ijk for i == k")
             current_clause += 1
-            print_clause([x_ijk, -x_pijpk], current_clause, [])
-            # x_pipkpk /\ x_0jpk -> x_ijk
+            print_clause([x_ijk, -x_ijpk], current_clause, [])
             current_clause += 1
-            print_clause([x_ijk, -x_pipkpk, -x_0jpk], current_clause, [])
+            print_clause([x_ijk, -x_ipkpk, -x_pkjpk], current_clause, [])
+
 
             v.append(x_ijk)
 
