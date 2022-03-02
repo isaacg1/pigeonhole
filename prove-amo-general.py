@@ -234,7 +234,7 @@ if __name__ == "__main__":
         m = int(sys.argv[2])
         is_lrat = "--lrat" in sys.argv
         is_optimized = "--optimized" in sys.argv
-        if n < 7 and is_optimized:
-            print("Optimization not enabled for n < 7 - use kissat/cadical + drat-trim directly.")
+        if n <= 7 and is_optimized:
+            print("Optimization not enabled for n <= 7 - use kissat/cadical + drat-trim directly.")
         else:
             full_proof(n, m, is_lrat, is_optimized)
