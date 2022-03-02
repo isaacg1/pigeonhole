@@ -171,17 +171,54 @@ def delete_original(n):
 
 
 # End-to-end proof
-def full_proof(n, m, is_lrat):
-    for n_i in range(n, 1, -1):
+def full_proof(n, m, is_lrat, is_optimized):
+    low_range = 7 if is_optimized else 1
+    for n_i in range(n, low_range, -1):
         recurse_amo(n, n_i, m, is_lrat)
         if is_lrat:
             continue
         if n_i < n:
             recurse_amo(n, n_i+1, m, is_lrat, delete=True)
+            pass
         else:
             delete_original(n)
-    print("c Complete")
-    print("0")
+            pass
+    if not is_optimized:
+        print("c Complete")
+        print("0")
+    if is_optimized:
+        unoffset_filename = "trimmed-7.drat"
+        offset = n * (n+1) * 2 - 8 * 9 * 2
+        num_birds_orig = n + 1
+        num_holes_orig = n
+        num_birds_prev = 8 + 1
+        num_holes_prev = 8
+        num_birds_curr = num_birds_prev - 1
+        num_holes_curr = num_holes_prev - 1
+        base_var_prev = sum(
+            2 * num_holes_i * (num_holes_i + 1)
+            for num_holes_i in range(num_holes_prev + 1, num_holes_orig + 1)
+        )
+        base_var_curr = base_var_prev + 2 * num_holes_prev * num_birds_prev
+        offset = base_var_curr - 144
+        print("c", offset)
+
+        with open(unoffset_filename) as f:
+            for line in f:
+                fields = line.split()
+                for field in fields:
+                    if field and field[0] in '-0123456789':
+                        int_field = int(field)
+                        if int_field != 0:
+                            if int_field < 0:
+                                int_field -= offset
+                            else:
+                                int_field += offset
+                            print(int_field, end=" ")
+                            continue
+                    print(field, end=" ")
+                print()
+
 
 
 if __name__ == "__main__":
@@ -196,4 +233,8 @@ if __name__ == "__main__":
         n = int(sys.argv[1])
         m = int(sys.argv[2])
         is_lrat = "--lrat" in sys.argv
-        full_proof(n, m, is_lrat)
+        is_optimized = "--optimized" in sys.argv
+        if n < 7 and is_optimized:
+            print("Optimization not enabled for n < 7 - use kissat/cadical + drat-trim directly.")
+        else:
+            full_proof(n, m, is_lrat, is_optimized)
