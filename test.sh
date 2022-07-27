@@ -1,4 +1,7 @@
 #/usr/bin/bash
+
+mkdir testing
+
 echo "Clauses"
 for i in {1..20}
     do
